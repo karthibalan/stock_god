@@ -14,7 +14,7 @@ TELEGRAM_TOKEN = os.getenv('TELEGRAM_TOKEN')
 CHAT_ID = os.getenv('CHAT_ID')
 
 # Global variable to control monitoring state
-monitoring_active = True
+monitoring_active = False
 
 
 def fetch_stock_list():
@@ -65,7 +65,7 @@ async def send_end_of_day_update(context: ContextTypes.DEFAULT_TYPE):
 
 
 async def scheduled_end_of_day_update(context: ContextTypes.DEFAULT_TYPE):
-    while True:
+    while monitoring_active:
         now = datetime.now()
         target_time = now.replace(hour=16, minute=0, second=0, microsecond=0)
         if now > target_time:
@@ -79,16 +79,14 @@ async def scheduled_end_of_day_update(context: ContextTypes.DEFAULT_TYPE):
 
 
 async def monitor_stocks(context: ContextTypes.DEFAULT_TYPE):
-    global monitoring_active
     last_stock_list = []
 
-    while True:
-        if monitoring_active:
-            current_stock_list = fetch_stock_list()
+    while monitoring_active:
+        current_stock_list = fetch_stock_list()
 
-            if current_stock_list != last_stock_list:
-                await send_update(context, current_stock_list)
-                last_stock_list = current_stock_list
+        if current_stock_list != last_stock_list:
+            await send_update(context, current_stock_list)
+            last_stock_list = current_stock_list
 
         await asyncio.sleep(3600)
 
@@ -102,8 +100,8 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     global monitoring_active
     monitoring_active = True
     await update.message.reply_text("Stock monitor started!")
-    await asyncio.create_task(monitor_stocks(context))
-    await asyncio.create_task(scheduled_end_of_day_update(context))
+    asyncio.create_task(monitor_stocks(context))
+    asyncio.create_task(scheduled_end_of_day_update(context))
 
 
 async def stop(update: Update, context: ContextTypes.DEFAULT_TYPE):

@@ -11,25 +11,28 @@ import os
 
 load_dotenv()
 
-
 TELEGRAM_TOKEN = os.getenv('TELEGRAM_TOKEN')
 CHAT_ID = os.getenv('CHAT_ID')
 
+
 def fetch_stock_list():
     data = {
-        'scan_clause': '( {cash} ( latest low > latest ema ( latest close , 20 ) and latest volume > 1 day ago sma ( volume,30 ) * 1 and latest count( 20, 1 where ( latest open - latest close ) = 0 ) < 1 and latest "close - 1 candle ago close / 1 candle ago close * 100" > 1 and ( {cash} ( 1 day ago "close - 1 candle ago close / 1 candle ago close * 100" < -1 or 2 days ago "close - 1 candle ago close / 1 candle ago close * 100" < -1 or 3 days ago "close - 1 candle ago close / 1 candle ago close * 100" < -1 ) ) and latest ema ( latest close , 50 ) < latest low and latest ema ( latest close , 200 ) < latest low and latest close < latest ema ( latest close , 20 ) * 1.10 and latest min ( 20 , latest ema ( latest close , 20 ) ) < latest ema ( latest close , 20 ) * 0.98 ) )  '
+        'scan_clause':
+        '( {cash} ( latest low > latest ema ( latest close , 20 ) and latest volume > 1 day ago sma ( volume,30 ) * 1 and latest count( 20, 1 where ( latest open - latest close ) = 0 ) < 1 and latest "close - 1 candle ago close / 1 candle ago close * 100" > 1 and ( {cash} ( ( {cash} ( 1 day ago "close - 1 candle ago close / 1 candle ago close * 100" < -1 and 1 day ago volume < latest volume * 0.3 ) ) or ( {cash} ( 2 days ago "close - 1 candle ago close / 1 candle ago close * 100" < -1 and 2 days ago volume < latest volume * 0.3 ) ) or ( {cash} ( 3 days ago "close - 1 candle ago close / 1 candle ago close * 100" < -1 and 3 days ago volume < latest volume * 0.3 ) ) ) ) and latest ema ( latest close , 50 ) < latest low and latest ema ( latest close , 200 ) < latest low and latest close < latest ema ( latest close , 20 ) * 1.10 and latest min ( 20 , latest ema ( latest close , 20 ) ) < latest ema ( latest close , 20 ) * 0.98 and weekly volume > weekly sma ( weekly volume , 20 ) * 1.5 ) )  '
     }
 
     with requests.Session() as s:
         r = s.get('https://chartink.com/screener/time-pass-48')
         soup = bs(r.content, 'lxml')  # Ensure lxml is installed
-        s.headers['X-CSRF-TOKEN'] = soup.select_one('[name=csrf-token]')['content']
+        s.headers['X-CSRF-TOKEN'] = soup.select_one(
+            '[name=csrf-token]')['content']
         r = s.post('https://chartink.com/screener/process', data=data).json()
 
         # Extract stock names and details
         df = pd.DataFrame(r['data'])
         if not df.empty:
-            stocks = df['nsecode'].tolist()  # Adjust based on the actual column name
+            stocks = df['nsecode'].tolist(
+            )  # Adjust based on the actual column name
         else:
             stocks = []
 
@@ -43,19 +46,22 @@ async def send_update(context: ContextTypes.DEFAULT_TYPE, stock_list):
 
 async def fetch_end_of_day_list():
     data = {
-        'scan_clause': '( {cash} ( ( {cash} ( ( {cash} ( latest volume > 1 day ago sma ( volume,30 ) * 2 and latest close >= latest max ( 250 , latest high ) * 0.98 and latest close > latest open and latest "close - 1 candle ago close / 1 candle ago close * 100" > 3 and latest count( 100, 1 where latest "close - 1 candle ago close / 1 candle ago close * 100" = 0 ) < 1 ) ) and ( {33489} not ( latest close > 1 ) ) ) ) ) )   '
+        'scan_clause':
+        '( {cash} ( ( {cash} ( ( {cash} ( latest volume > 1 day ago sma ( volume,30 ) * 2 and latest close >= latest max ( 250 , latest high ) * 0.98 and latest close > latest open and latest "close - 1 candle ago close / 1 candle ago close * 100" > 3 and latest count( 100, 1 where latest "close - 1 candle ago close / 1 candle ago close * 100" = 0 ) < 1 ) ) and ( {33489} not ( latest close > 1 ) ) ) ) ) )   '
     }
 
     with requests.Session() as s:
         r = s.get('https://chartink.com/screener/time-pass-48')
         soup = bs(r.content, 'lxml')  # Ensure lxml is installed
-        s.headers['X-CSRF-TOKEN'] = soup.select_one('[name=csrf-token]')['content']
+        s.headers['X-CSRF-TOKEN'] = soup.select_one(
+            '[name=csrf-token]')['content']
         r = s.post('https://chartink.com/screener/process', data=data).json()
 
         # Extract stock names and details
         df = pd.DataFrame(r['data'])
         if not df.empty:
-            stocks = df['nsecode'].tolist()  # Adjust based on the actual column name
+            stocks = df['nsecode'].tolist(
+            )  # Adjust based on the actual column name
         else:
             stocks = []
 

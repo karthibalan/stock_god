@@ -67,7 +67,7 @@ async def send_end_of_day_update(context: ContextTypes.DEFAULT_TYPE):
 async def scheduled_end_of_day_update(context: ContextTypes.DEFAULT_TYPE):
     while monitoring_active:
         now = datetime.now()
-        target_time = now.replace(hour=16, minute=0, second=0, microsecond=0)
+        target_time = now.replace(hour=10, minute=30, second=0, microsecond=0)
         if now > target_time:
             target_time += timedelta(days=1)
 
